@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book List Search</title>
+    <!-- Include Bootstrap CSS for styling -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Include PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        /* Custom CSS styles */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .col-md-4 {
+            flex: 1 1 calc(33.333% - 1rem);
+            box-sizing: border-box;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .card img {
+            width: 100%;
+            height: auto;
+        }
+        .card-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .card-text {
+            margin-bottom: 1rem;
+            color: #6c757d;
+        }
+        .btn {
+            margin-top: auto;
+            align-self: flex-start;
+            padding: 0.5rem 1rem;
+            border: 1px solid #007bff;
+            background: none;
+            color: #007bff;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .btn:hover {
+            background: #007bff;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-4">
+        <h1>Book List Search</h1>
+        <input type="text" id="search" class="form-control my-3" placeholder="Search books...">
+        <div class="row" id="bookContainer"></div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadCSVFile();
+            document.getElementById('search').addEventListener('input', filterItems);
+        });
+
+        function loadCSVFile() {
+            const csvLink = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSj1Fu63OoSDb2xQxAp16xDzddkIgzb4LLRg-fcgjEKJOi0FRI70vrszirPU8UIeo3unSMHmGP8X9Ro/pub?output=csv';
+
+            fetch(csvLink)
+                .then(response => response.text())
+                .then(data => {
+                    const books = Papa.parse(data, { header: true }).data;
+                    displayBooks(books);
+                })
+                .catch(error => {
+                    console.error('Error fetching the CSV file:', error);
+                    document.getElementById('bookContainer').innerHTML = '<p>Error loading data.</p>';
+                });
+        }
+
+        function displayBooks(books) {
+            const container = document.getElementById('bookContainer');
+            container.innerHTML = "";
+
+            books.forEach(book => {
+                const title = book['book name'] || 'Unknown Title';
+                const author = book['author'] || 'Unknown Author';
+                const description = book['description'] || 'No description available';
+                const price = book['price'] || 'N/A';
+                const photo = book['Photo'] || 'placeholder.jpg';
+
+                const col = document.createElement('div');
+                col.className = 'col-md-4';
+                col.innerHTML = `
+                    <div class="card h-100">
+                        <img src="${photo}" class="card-img-top" alt="${title}">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${title}</h5>
+                            <p class="card-text text-muted">by ${author}</p>
+                            <p class="card-text">${description}</p>
+                            <p class="card-text">Price: ${price}</p>
+                            <a href="#" class="btn">View Details</a>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+        }
+
+        function filterItems() {
+            const searchValue = document.getElementById('search').value.toLowerCase().trim();
+            const items = document.getElementById('bookContainer').getElementsByClassName('col-md-4');
+            for (let i = 0; i < items.length; i++) {
+                let itemText = items[i].textContent.toLowerCase();
+                items[i].style.display = itemText.includes(searchValue) ? '' : 'none';
+            }
+        }
+    </script>
+</body>
+</html>
